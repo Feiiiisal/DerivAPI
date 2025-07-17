@@ -91,3 +91,47 @@ async def fetch_candles(
     candles = response.get("candles", [])
     return list(candles)
 
+
+async def fetch_all_candles(
+    symbol: str,
+    start: int,
+    granularity: int,
+    page_size: int = 1000,
+) -> List[Dict]:
+    """Fetch all available candles for ``symbol`` starting at ``start``.
+
+    The function pages through results ``page_size`` bars at a time until no
+    more data is available, returning a list of candles sorted in ascending
+    order by ``epoch``.
+    """
+
+    all_candles: List[Dict] = []
+    end: Union[int, str] = "latest"
+
+    while True:
+        batch = await fetch_candles(symbol, start, end, granularity, page_size)
+        if not batch:
+            break
+
+        batch_sorted = sorted(batch, key=lambda c: c["epoch"])
+        all_candles = batch_sorted + all_candles if all_candles else batch_sorted
+
+        if len(batch) < page_size:
+            break
+
+        oldest = batch_sorted[0]["epoch"]
+        end = oldest - granularity
+
+    return all_candles
+
+
+if __name__ == "__main__":
+    import asyncio
+    import time
+
+    start = int(time.time()) - 365 * 24 * 3600
+    candles = asyncio.run(fetch_all_candles("CRASH300", start, 86400))
+    print(f"Fetched {len(candles)} daily candles")
+    print("First:", candles[0])
+    print("Last: ", candles[-1])
+
