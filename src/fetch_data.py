@@ -130,7 +130,7 @@ if __name__ == "__main__":
     import time
 
     start = int(time.time()) - 365 * 24 * 3600
-    candles = asyncio.run(fetch_all_candles("CRASH300", start, 86400))
+    candles = asyncio.run(fetch_all_candles("CRASH500", start, 86400))
     print(f"Fetched {len(candles)} daily candles")
     print("First:", candles[0])
     print("Last: ", candles[-1])
